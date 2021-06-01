@@ -32,7 +32,7 @@ def corr(arr1, arr2, area):
 
 
 def cov(arr1, arr2, area):
-    """
+    """Calculates area-weighted covariance
 
     Parameters
     ----------
