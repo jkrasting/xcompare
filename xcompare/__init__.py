@@ -1,3 +1,5 @@
-""" xcompare: GFDL-Specific tool for comparinf Xarray Datsets """
+""" xcompare: GFDL-Specific tool for comparing Xarray Datsets """
 
-from .xr_stats import corr, cov, xr_stats_2d
+from . import xr_stats
+from . import xcompare
+from .xcompare import compare_datasets

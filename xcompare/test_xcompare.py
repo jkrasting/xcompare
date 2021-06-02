@@ -3,6 +3,7 @@ import numpy as np
 import xarray as xr
 from .xcompare import (
     compare_datasets,
+    dataset_vars,
     infer_dim_name,
     reorder_dims,
     equal_horiz_dims,
@@ -91,7 +92,7 @@ def test_equal_horiz_dims_3():
     assert equal_horiz_dims(_ds1, _ds2)
 
 
-def test_compare_datasets():
+def test_compare_datasets_1():
     _ds1 = ds1.mean(dim="t").mean(dim="depth")
     _ds2 = ds2.mean(dim="t").mean(dim="depth")
 
@@ -116,3 +117,15 @@ def test_compare_datasets():
     assert np.allclose(result.varname2.attrs["bias"], 0.0031753039070744104)
     assert np.allclose(result.varname2.attrs["rmse"], 0.08174864295535195)
     assert np.allclose(result.varname2.attrs["rsquared"], -0.10642072198515153)
+
+
+def test_compare_datasets_2():
+    _ds1 = ds1.mean(dim="t").mean(dim="depth")
+    _ds2 = ds2.mean(dim="t").mean(dim="depth")
+
+    result = compare_datasets(_ds1, _ds1)
+
+
+def test_dataset_vars():
+    result = dataset_vars(ds1)
+    assert sorted(result) == ["area", "varname1", "varname2"]

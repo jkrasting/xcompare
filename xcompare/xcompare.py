@@ -19,6 +19,7 @@ __all__ = [
     "LON_DIMS",
     "Z_DIMS",
     "infer_dim_name",
+    "dataset_vars",
     "extract_var_from_dataset",
     "reorder_dims",
 ]
@@ -69,8 +70,17 @@ def compare_datasets(ds1, ds2, varlist=None):
         (ds1, ds2, difference dataset)
     """
 
+    if varlist is None:
+        vars1 = set(dataset_vars(ds1))
+        vars2 = set(dataset_vars(ds2))
+        varlist = list(vars1.intersection(vars2))
+
     ds1 = extract_var_from_dataset(ds1, varlist=varlist)
     ds2 = extract_var_from_dataset(ds2, varlist=varlist)
+
+    vars1 = set(dataset_vars(ds1))
+    vars2 = set(dataset_vars(ds2))
+    varlist = list(vars1.intersection(vars2))
 
     if equal_horiz_dims(ds1, ds2):
         diff = ds1 - ds2
@@ -157,7 +167,7 @@ def extract_var_from_dataset(ds, varlist=None):
     xarray.Dataset
     """
     result = xr.Dataset()
-    varlist = ds.variables if varlist is None else varlist
+    varlist = list(ds.variables) if varlist is None else varlist
     if "area" in ds.variables:
         varlist = varlist + ["area"]
     varlist = sorted(list(set(varlist)))
@@ -179,6 +189,9 @@ def extract_var_from_dataset(ds, varlist=None):
         ydim = infer_dim_name(_arr, LAT_DIMS)
         horiz_coord = (xdim, ydim)
 
+        if xdim is None or ydim is None:
+            continue
+
         if horiz_coord == ("xh", "yh"):
             result["area"] = ds["areacello"]
             coords = [
@@ -196,12 +209,37 @@ def extract_var_from_dataset(ds, varlist=None):
         _arr = _arr.assign_coords(coords)
 
         if rename_latlon_coords:
-            _arr = _arr.rename({xdim: "lon", ydim: "lat"})
+            try:
+                _arr = _arr.rename({xdim: "lon", ydim: "lat"})
+            except Exception as e:
+                print(e)
+                print(var)
 
         # append to new dataset
         result[var] = _arr
 
     return result
+
+
+def dataset_vars(ds):
+    """Returns a list of variables in a dataset
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Input dataset
+
+    Returns
+    -------
+    list
+    """
+    varlist = set(ds.variables)
+    dimlist = set(ds.dims)
+    coordlist = set(ds.coords)
+    # remove dims and coords
+    varlist = varlist - dimlist
+    varlist = varlist - coordlist
+    return list(varlist)
 
 
 def infer_dim_name(arr, dimlist):
