@@ -97,7 +97,7 @@ def test_compare_datasets_1():
     _ds2 = ds2.mean(dim="t").mean(dim="depth")
 
     result = compare_datasets(_ds1, _ds1, varlist=["varname1", "varname2"])
-    result = result[-1]
+    result = result["diff"]
 
     assert result.varname1.attrs["bias"] == 0.0
     assert result.varname1.attrs["rmse"] == 0.0
@@ -108,7 +108,7 @@ def test_compare_datasets_1():
     assert result.varname2.attrs["rsquared"] == 1.0
 
     result = compare_datasets(_ds1, _ds2, varlist=["varname1", "varname2"])
-    result = result[-1]
+    result = result["diff"]
 
     assert np.allclose(result.varname1.attrs["bias"], 0.0031753039070744104)
     assert np.allclose(result.varname1.attrs["rmse"], 0.08174864295535195)

@@ -78,6 +78,12 @@ def compare_datasets(ds1, ds2, varlist=None):
     ds1 = extract_var_from_dataset(ds1, varlist=varlist)
     ds2 = extract_var_from_dataset(ds2, varlist=varlist)
 
+    ds1_orig = ds1.copy()
+    ds2_orig = ds2.copy()
+
+    ds1_orig.load()
+    ds2_orig.load()
+
     vars1 = set(dataset_vars(ds1))
     vars2 = set(dataset_vars(ds2))
     varlist = list(vars1.intersection(vars2))
@@ -125,7 +131,13 @@ def compare_datasets(ds1, ds2, varlist=None):
                     xr_stats_2d(var1, var2, area, fmt="dict")
                 )
 
-    return (ds1, ds2, diff)
+    return {
+        "ds1": ds1,
+        "ds2": ds2,
+        "ds1_orig": ds1_orig,
+        "ds2_orig": ds2_orig,
+        "diff": diff,
+    }
 
 
 def equal_horiz_dims(ds1, ds2):
