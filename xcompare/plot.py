@@ -66,6 +66,7 @@ def plot_three_panel(
 
         arr1_rgd = results["ds1"][var]
         arr2_rgd = results["ds2"][var]
+        diff_rgd = results["diff"][var]
 
         if len(arr1_rgd.lon.shape) == 2:
 
@@ -76,6 +77,10 @@ def plot_three_panel(
                 )
                 arr2_rgd = arr2_rgd.where(
                     (arr2_rgd.lon > lon_range[0]) & (arr2_rgd.lon < lon_range[1]),
+                    drop=True,
+                )
+                diff_rgd = arrdiff.where(
+                    (diff_rgd.lon > lon_range[0]) & (diff_rgd.lon < lon_range[1]),
                     drop=True,
                 )
                 area = area.where(
@@ -91,6 +96,10 @@ def plot_three_panel(
                     (arr2_rgd.lat > lat_range[0]) & (arr2_rgd.lat < lat_range[1]),
                     drop=True,
                 )
+                diff_rgd = diff_rgd.where(
+                    (diff_rgd.lat > lat_range[0]) & (diff_rgd.lat < lat_range[1]),
+                    drop=True,
+                )
                 area = area.where(
                     (area.lat > lat_range[0]) & (area.lat < lat_range[1]), drop=True
                 )
@@ -102,16 +111,22 @@ def plot_three_panel(
 
             arr1_rgd = arr1_rgd.sel(lon=slice(*lon_range)).sel(lat=slice(*lat_range))
             arr2_rgd = arr2_rgd.sel(lon=slice(*lon_range)).sel(lat=slice(*lat_range))
+            diff_rgd = diff_rgd.sel(lon=slice(*lon_range)).sel(lat=slice(*lat_range))
 
         try:
             area = area.fillna(0.0)
             stats = xcompare.xr_stats.xr_stats_2d(arr1_rgd, arr2_rgd, area, fmt="dict")
+            concat = xr.concat([arr1_rgd, arr2_rgd], dim="dset")
         except Exception as e:
+            diff_rgd = arrdiff
             stats = None
+            concat = xr.concat([arr1, arr2], dim="dset")
             warnings.warn(f"Unable to calculate stats: {e}")
             pass
 
     else:
+        diff_rgd = arrdiff
+        concat = xr.concat([arr1, arr2], dim="dset")
         try:
             stats = {
                 "bias": arrdiff.bias,
@@ -124,15 +139,14 @@ def plot_three_panel(
             pass
 
     if vmin is None or vmax is None:
-        concat = xr.concat([arr1, arr2], dim="dset")
         vmin = concat.mean() - 1.5 * concat.std() if vmin is None else vmin
         vmax = concat.mean() + 1.5 * concat.std() if vmax is None else vmax
 
     if diffvmin is None or diffvmax is None:
         val = np.max(
             (
-                np.abs(arrdiff.mean() - 1.5 * arrdiff.std()),
-                np.abs(arrdiff.mean() + 1.5 * arrdiff.std()),
+                np.abs(diff_rgd.mean() - 1.5 * diff_rgd.std()),
+                np.abs(diff_rgd.mean() + 1.5 * diff_rgd.std()),
             )
         )
         diffvmin = -1.0 * val
