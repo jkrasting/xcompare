@@ -60,7 +60,9 @@ def plot_three_panel(
     arr1 = results["ds1_orig"][var]
     arr2 = results["ds2_orig"][var]
     arrdiff = results["diff"][var]
-    area = results["diff"]["area"]
+
+    # Check to see if area field made it all the way through
+    area = results["diff"]["area"] if "area" in results["diff"].variables else None
 
     if lon_range is not None or lat_range is not None:
 
@@ -83,9 +85,11 @@ def plot_three_panel(
                     (diff_rgd.lon > lon_range[0]) & (diff_rgd.lon < lon_range[1]),
                     drop=True,
                 )
-                area = area.where(
-                    (area.lon > lon_range[0]) & (area.lon < lon_range[1]), drop=True
-                )
+
+                if area is not None:
+                    area = area.where(
+                        (area.lon > lon_range[0]) & (area.lon < lon_range[1]), drop=True
+                    )
 
             if lat_range is not None:
                 arr1_rgd = arr1_rgd.where(
@@ -100,9 +104,11 @@ def plot_three_panel(
                     (diff_rgd.lat > lat_range[0]) & (diff_rgd.lat < lat_range[1]),
                     drop=True,
                 )
-                area = area.where(
-                    (area.lat > lat_range[0]) & (area.lat < lat_range[1]), drop=True
-                )
+
+                if area is not None:
+                    area = area.where(
+                        (area.lat > lat_range[0]) & (area.lat < lat_range[1]), drop=True
+                    )
 
         else:
 
@@ -114,8 +120,13 @@ def plot_three_panel(
             diff_rgd = diff_rgd.sel(lon=slice(*lon_range)).sel(lat=slice(*lat_range))
 
         try:
-            area = area.fillna(0.0)
-            stats = xcompare.xr_stats.xr_stats_2d(arr1_rgd, arr2_rgd, area, fmt="dict")
+            if area is not None:
+                area = area.fillna(0.0)
+                stats = xcompare.xr_stats.xr_stats_2d(
+                    arr1_rgd, arr2_rgd, area, fmt="dict"
+                )
+            else:
+                stats = None
             concat = xr.concat([arr1_rgd, arr2_rgd], dim="dset")
         except Exception as e:
             diff_rgd = arrdiff
