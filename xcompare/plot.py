@@ -206,4 +206,6 @@ def plot_three_panel(
             transform=ax3.transAxes,
         )
 
+    plt.suptitle(var)
+
     return fig
