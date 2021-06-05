@@ -119,16 +119,17 @@ def compare_datasets(ds1, ds2, varlist=None):
         # create difference array
         diff = ds1 - ds2
 
-    if area is not None:
-        # include cell area
-        diff["area"] = area
+    # include cell area
+    diff["area"] = area if area is not None else diff[varlist[0]] * 0.0
+
+    if diff["area"].sum() > 0.0:
         # compute statistics
         for x in varlist:
             var1 = ds1[x]
             var2 = ds2[x]
             if len(var1.shape) == 2 and len(var2.shape) == 2:
                 diff[x] = diff[x].assign_attrs(
-                    xr_stats_2d(var1, var2, area, fmt="dict")
+                    xr_stats_2d(var1, var2, diff["area"], fmt="dict")
                 )
 
     return {

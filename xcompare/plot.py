@@ -122,8 +122,10 @@ def plot_three_panel(
         try:
             if area is not None:
                 area = area.fillna(0.0)
-                stats = xcompare.xr_stats.xr_stats_2d(
-                    arr1_rgd, arr2_rgd, area, fmt="dict"
+                stats = (
+                    xcompare.xr_stats.xr_stats_2d(arr1_rgd, arr2_rgd, area, fmt="dict")
+                    if area.sum() > 0.0
+                    else None
                 )
             else:
                 stats = None
