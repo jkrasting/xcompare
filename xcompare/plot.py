@@ -39,7 +39,7 @@ def plot_panel(
 
     ax.set_extent([*lon_range, *lat_range], ccrs.PlateCarree())
 
-    ax.text(0.01, 1.02, label, ha="left", transform=ax.transAxes, fontsize=12)
+    ax.text(0.01, 1.02, label, ha="left", transform=ax.transAxes, fontsize=10)
     return cb
 
 
