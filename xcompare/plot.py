@@ -61,6 +61,10 @@ def plot_three_panel(
     arr2 = results["ds2_orig"][var]
     arrdiff = results["diff"][var]
 
+    arr1.load()
+    arr2.load()
+    arrdiff.load()
+
     # Check to see if area field made it all the way through
     area = results["diff"]["area"] if "area" in results["diff"].variables else None
 
@@ -69,6 +73,10 @@ def plot_three_panel(
         arr1_rgd = results["ds1"][var]
         arr2_rgd = results["ds2"][var]
         diff_rgd = results["diff"][var]
+
+        arr1_rgd.load()
+        arr2_rgd.load()
+        diff_rgd.load()
 
         if len(arr1_rgd.lon.shape) == 2:
 
