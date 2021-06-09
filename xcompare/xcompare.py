@@ -52,7 +52,7 @@ LON_DIMS = RECT_LON_DIMS + CURV_LON_CENTERS + CURV_LON_CORNERS
 Z_DIMS = Z_ATM_DIMS + Z_OCN_DIMS
 
 
-def compare_datasets(ds1, ds2, varlist=None):
+def compare_datasets(ds1, ds2, varlist=None, timeavg=False):
     """Compares two Xarray datasets
 
     Parameters
@@ -63,6 +63,8 @@ def compare_datasets(ds1, ds2, varlist=None):
         Second dataset
     varlist: list
         List of variables
+    timeavg: bool
+        Perform a time average of the datasets, default=False
 
     Returns
     -------
@@ -78,10 +80,11 @@ def compare_datasets(ds1, ds2, varlist=None):
     ds1 = extract_var_from_dataset(ds1, varlist=varlist)
     ds2 = extract_var_from_dataset(ds2, varlist=varlist)
 
-    tdim1 = infer_dim_name(ds1, TIME_DIMS)
-    ds1 = ds1.mean(dim=tdim1) if tdim1 is not None else ds1
-    tdim2 = infer_dim_name(ds2, TIME_DIMS)
-    ds2 = ds2.mean(dim=tdim2) if tdim2 is not None else ds2
+    if timeavg:
+        tdim1 = infer_dim_name(ds1, TIME_DIMS)
+        ds1 = ds1.mean(dim=tdim1) if tdim1 is not None else ds1
+        tdim2 = infer_dim_name(ds2, TIME_DIMS)
+        ds2 = ds2.mean(dim=tdim2) if tdim2 is not None else ds2
 
     ds1_orig = ds1.copy()
     ds2_orig = ds2.copy()
