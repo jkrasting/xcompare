@@ -55,6 +55,7 @@ def plot_three_panel(
     diffvmax=None,
     lon_range=None,
     lat_range=None,
+    sigma=1.5,
     cmap=None,
 ):
     arr1 = results["ds1_orig"][var]
@@ -160,14 +161,14 @@ def plot_three_panel(
             pass
 
     if vmin is None or vmax is None:
-        vmin = concat.mean() - 1.5 * concat.std() if vmin is None else vmin
-        vmax = concat.mean() + 1.5 * concat.std() if vmax is None else vmax
+        vmin = concat.mean() - sigma * concat.std() if vmin is None else vmin
+        vmax = concat.mean() + sigma * concat.std() if vmax is None else vmax
 
     if diffvmin is None or diffvmax is None:
         val = np.max(
             (
-                np.abs(diff_rgd.mean() - 1.5 * diff_rgd.std()),
-                np.abs(diff_rgd.mean() + 1.5 * diff_rgd.std()),
+                np.abs(diff_rgd.mean() - sigma * diff_rgd.std()),
+                np.abs(diff_rgd.mean() + sigma * diff_rgd.std()),
             )
         )
         diffvmin = -1.0 * val
