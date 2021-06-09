@@ -23,9 +23,6 @@ arr3d = xr.DataArray(
 )
 arr2d = arr3d.mean(dim="depth").squeeze()
 
-# areacoords = {"lat":coords["lat"], "xh":coords["xh"]}
-# area = xr.DataArray(rng.random((10,13)), coords=areacoords, dims=[k for k, v in areacoords.items()])
-
 ds1 = xr.Dataset()
 ds1["varname1"] = arr3d
 ds1["varname2"] = arr2d
@@ -93,10 +90,11 @@ def test_equal_horiz_dims_3():
 
 
 def test_compare_datasets_1():
-    _ds1 = ds1.mean(dim="t").mean(dim="depth")
-    _ds2 = ds2.mean(dim="t").mean(dim="depth")
+    _ds1 = ds1.mean(dim="depth")
 
-    result = compare_datasets(_ds1, _ds1, varlist=["varname1", "varname2"])
+    result = compare_datasets(
+        _ds1, _ds1, varlist=["varname1", "varname2"], timeavg=True
+    )
     result = result["diff"]
 
     assert result.varname1.attrs["bias"] == 0.0
@@ -107,7 +105,14 @@ def test_compare_datasets_1():
     assert result.varname2.attrs["rmse"] == 0.0
     assert result.varname2.attrs["rsquared"] == 1.0
 
-    result = compare_datasets(_ds1, _ds2, varlist=["varname1", "varname2"])
+
+def test_compare_datasets_2():
+    _ds1 = ds1.mean(dim="depth")
+    _ds2 = ds2.mean(dim="depth")
+
+    result = compare_datasets(
+        _ds1, _ds2, varlist=["varname1", "varname2"], timeavg=True
+    )
     result = result["diff"]
 
     assert np.allclose(result.varname1.attrs["bias"], 0.0031753039070744104)
@@ -119,11 +124,15 @@ def test_compare_datasets_1():
     assert np.allclose(result.varname2.attrs["rsquared"], -0.10642072198515153)
 
 
-def test_compare_datasets_2():
-    _ds1 = ds1.mean(dim="t").mean(dim="depth")
-    _ds2 = ds2.mean(dim="t").mean(dim="depth")
+def test_compare_datasets_3():
+    _ds1 = ds1.mean(dim="depth")
+    _ds2 = ds2.mean(dim="depth")
 
-    result = compare_datasets(_ds1, _ds1)
+    result = compare_datasets(_ds1, _ds2)
+    result = result["diff"]
+
+    answers = np.array([-0.0248607, 0.01296314, -0.00738818, 0.01785682, -0.02044864])
+    assert np.allclose(np.array(result["varname1"].mean(axis=(-2, -1))), answers)
 
 
 def test_dataset_vars():
