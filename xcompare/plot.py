@@ -225,18 +225,32 @@ def plot_three_panel(
     plt.colorbar(cb3, ax=ax3, orientation="vertical")
 
     # if lat_range is None and lon_range is None:
+    ax3.text(
+        0.01,
+        -0.07,
+        f"Max = {np.array(diff_rgd.max())}",
+        ha="left",
+        transform=ax3.transAxes,
+    )
+    ax3.text(
+        0.01,
+        -0.14,
+        f"Min = {np.array(diff_rgd.min())}",
+        ha="left",
+        transform=ax3.transAxes,
+    )
     if stats is not None:
         ax3.text(
-            0.01, -0.07, f"Bias = {stats['bias']}", ha="left", transform=ax3.transAxes
+            0.01, -0.21, f"Bias = {stats['bias']}", ha="left", transform=ax3.transAxes
         )
 
         ax3.text(
-            0.01, -0.14, f"RMSE = {stats['rmse']}", ha="left", transform=ax3.transAxes
+            0.01, -0.28, f"RMSE = {stats['rmse']}", ha="left", transform=ax3.transAxes
         )
 
         ax3.text(
             0.01,
-            -0.21,
+            -0.35,
             f"r^2 = {stats['rsquared']}",
             ha="left",
             transform=ax3.transAxes,
