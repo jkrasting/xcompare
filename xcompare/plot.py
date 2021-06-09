@@ -15,6 +15,7 @@ def plot_panel(
     latitude="lat",
     cmap=None,
     coastlines=True,
+    date_range=None,
     label=None,
     vmin=None,
     vmax=None,
@@ -39,7 +40,8 @@ def plot_panel(
 
     ax.set_extent([*lon_range, *lat_range], ccrs.PlateCarree())
 
-    ax.text(0.01, 1.02, label, ha="left", transform=ax.transAxes, fontsize=10)
+    ax.text(0.01, 1.09, label, ha="left", transform=ax.transAxes, fontsize=10)
+    ax.text(0.01, 1.02, date_range, ha="left", transform=ax.transAxes, fontsize=10)
     return cb
 
 
@@ -68,6 +70,25 @@ def plot_three_panel(
 
     # Check to see if area field made it all the way through
     area = results["diff"]["area"] if "area" in results["diff"].variables else None
+
+    # Get time ranges from plots
+    daterange1 = (
+        results["ds1"].date_range if "date_range" in results["ds1"].attrs else None
+    )
+    daterange2 = (
+        results["ds2"].date_range if "date_range" in results["ds2"].attrs else None
+    )
+
+    daterange1 = (
+        f"Years {daterange1[0]} - {daterange1[1]}"
+        if isinstance(daterange1, tuple)
+        else None
+    )
+    daterange2 = (
+        f"Years {daterange2[0]} - {daterange2[1]}"
+        if isinstance(daterange2, tuple)
+        else None
+    )
 
     if lon_range is not None or lat_range is not None:
 
@@ -190,6 +211,7 @@ def plot_three_panel(
         lon_range=lon_range,
         lat_range=lat_range,
         cmap=cmap,
+        date_range=daterange1,
     )
 
     plt.colorbar(cb1, ax=ax1, orientation="vertical")
@@ -205,6 +227,7 @@ def plot_three_panel(
         lon_range=lon_range,
         lat_range=lat_range,
         cmap=cmap,
+        date_range=daterange2,
     )
 
     plt.colorbar(cb2, ax=ax2, orientation="vertical")
