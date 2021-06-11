@@ -90,7 +90,7 @@ def xr_stats_2d(arr1, arr2, area, fmt="list"):
     # calculate area-weighted bias
     bias = diff.weighted(_area).mean()
     # rmse
-    rse = xr.ufuncs.sqrt(diff ** 2)
+    rse = np.sqrt(diff ** 2)
     rmse = rse.weighted(_area).mean()
 
     # convert to numpy arrays
