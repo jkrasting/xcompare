@@ -170,28 +170,42 @@ def date_range(ds, ref_time="1970-01-01T00:00:00Z"):
         (start year, end year) for time dimension of the dataset
     """
 
-    if "time_bounds" in list(ds.variables):
-        ds = ds.rename({"time_bounds": "time_bnds"})
+    # start with values that are obviously incorrect in case
+    # the time range cannot be inferred from the cases below
+    t0 = 9999
+    t1 = 9999
 
-    if "time_bnds" in list(ds.variables):
+    # try to identify the time dimension and its bounds
+    tdim = infer_dim_name(ds, TIME_DIMS)
+    if "bounds" in ds[tdim].attrs:
+        bounds = ds[tdim].bounds
+    else:
+        bounds = ordered_list_extraction(list(ds.dims), ["time_bounds", "time_bnds"])
+        bounds = None if len(bounds) == 0 else bounds[0]
 
+    if (bounds is not None) and (bounds not in list(ds.variables)):
+        warnings.warn("Time bounds are defined but not in dataset.")
+
+    if (bounds is not None) and (bounds in list(ds.variables)):
         # Xarray decodes bounds times relative to the epoch and
         # returns a numpy timedelta object in some instances
         # instead of a cftime datetime object. Manual decoding
         # and shifting may be necessary
 
-        if isinstance(ds["time_bnds"].values[0][0], np.timedelta64):
-
+        if isinstance(ds[bounds].values[0][0], np.timedelta64):
             # When opening multi-file datasets with open_mfdataset(),
             # xarray strips out the calendar encoding. Since bounds
             # are computed differently to begin with, fall back to
             # another FMS generated time variable to get the calendar
             # base date.
 
-            if "units" in ds["time"].encoding.keys():
-                base_time = ds["time"].encoding["units"]
+            if "units" in ds[tdim].encoding.keys():
+                base_time = ds[tdim].encoding["units"]
+
+            # this case is FMS-specific
             elif "units" in ds["average_T1"].encoding.keys():
                 base_time = ds["average_T1"].encoding["units"]
+
             else:
                 base_time = None
 
@@ -200,34 +214,36 @@ def date_range(ds, ref_time="1970-01-01T00:00:00Z"):
                 base_time = np.datetime64(f"{base_time[0]}T{base_time[1]}Z")
                 offset = base_time - np.datetime64(ref_time)
 
-                t0 = ds["time_bnds"].values[0][0] + offset
+                t0 = ds[bounds].values[0][0] + offset
                 t0 = datetime.fromtimestamp(int(np.ceil(int(t0) * 1.0e-9)))
                 t0 = tuple(t0.timetuple())
                 # if start bound is Dec-31, advance to next year
                 t0 = (t0[0] + 1) if (t0[1:3] == (12, 31)) else t0[0]
 
-                t1 = ds["time_bnds"].values[-1][-1] + offset
+                t1 = ds[bounds].values[-1][-1] + offset
                 t1 = datetime.fromtimestamp(int(np.ceil(int(t1) * 1.0e-9)))
                 t1 = tuple(t1.timetuple())
                 # if end bound is Jan-1, fall back to previous year
                 t1 = (t1[0] - 1) if (t1[1:3] == (1, 1)) else t1[0]
 
             else:
-                # return very obvious incorrect dates to alert the
-                # user that the inferred time range failed
-                t0 = 9999
-                t1 = 9999
+                warnings.warn("Unable to decode times from time bounds.")
 
         else:
-            t0 = tuple(ds["time_bnds"].values[0][0].timetuple())[0]
-
+            # cftime object
+            t0 = tuple(ds[bounds].values[0][0].timetuple())[0]
             # if end bound is Jan-1, fall back to previous year
-            t1 = tuple(ds["time_bnds"].values[-1][-1].timetuple())
+            t1 = tuple(ds[bounds].values[-1][-1].timetuple())
             t1 = (t1[0] - 1) if (t1[1:3] == (1, 1)) else t1[0]
 
     else:
-        t0 = int(ds["time"].isel({"time": 0}).dt.strftime("%Y"))
-        t1 = int(ds["time"].isel({"time": -1}).dt.strftime("%Y"))
+        # last resort: extract year from first and last time value
+        try:
+            t0 = int(ds[tdim].isel({tdim: 0}).dt.strftime("%Y"))
+            t1 = int(ds[tdim].isel({tdim: -1}).dt.strftime("%Y"))
+        except Exception as e:
+            warnings.warn("Unable to decode time axis: " + str(e))
+            pass
 
     return (t0, t1)
 
