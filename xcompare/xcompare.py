@@ -346,6 +346,14 @@ def dataset_vars(ds):
     return list(varlist)
 
 
+def ordered_list_extraction(source_list, possible_items):
+    assert isinstance(source_list, list) and isinstance(
+        possible_items, list
+    ), "Both inputs must be list types"
+    source_list = [x for x in source_list if x in possible_items]
+    return sorted(source_list, key=possible_items.index)
+
+
 def infer_dim_name(arr, dimlist):
     """Infers dimension name from expected list
 

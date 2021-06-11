@@ -138,3 +138,10 @@ def test_compare_datasets_3():
 def test_dataset_vars():
     result = dataset_vars(ds1)
     assert sorted(result) == ["area", "varname1", "varname2"]
+
+
+def test_ordered_list_extraction():
+    list1 = ["canteloupes", "pears", "apricots"]
+    list2 = ["grapes", "canteloupes", "peaches", "mellons", "apricots", "apples"]
+    result = ordered_list_extraction(list1, list2)
+    assert result == ["canteloupes", "apricots"]
