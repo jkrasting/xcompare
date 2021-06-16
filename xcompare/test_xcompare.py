@@ -88,8 +88,6 @@ def xr_times_from_tuples(timetuple, boundstuple, timefmt="gfdl"):
     startyear = str(dset_out.time.values[0].strftime("%Y")).replace(" ", "0")
     dset_out.attrs["base_time_unit"] = f"days since {startyear}-01-01"
 
-    print(dset_out)
-
     return dset_out
 
 
