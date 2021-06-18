@@ -52,6 +52,8 @@ LAT_DIMS = RECT_LAT_DIMS + CURV_LAT_CENTERS + CURV_LAT_CORNERS
 LON_DIMS = RECT_LON_DIMS + CURV_LON_CENTERS + CURV_LON_CORNERS
 Z_DIMS = Z_ATM_DIMS + Z_OCN_DIMS
 
+AREA_VARS = ["areacello", "areacella", "area", "cell_area"]
+
 
 def compare_datasets(ds1, ds2, varlist=None, timeavg=False):
     """Compares two Xarray datasets
@@ -288,9 +290,11 @@ def extract_var_from_dataset(ds, varlist=None):
     """
     result = xr.Dataset()
     varlist = list(ds.variables) if varlist is None else varlist
-    if "area" in ds.variables:
-        varlist = varlist + ["area"]
+    areavar = infer_var_name(ds, AREA_VARS)
+    if areavar is not None:
+        varlist = varlist + [areavar]
     varlist = sorted(list(set(varlist)))
+
     for var in varlist:
 
         # setup a local array
@@ -337,6 +341,9 @@ def extract_var_from_dataset(ds, varlist=None):
 
         # append to new dataset
         result[var] = _arr
+
+    if areavar in result.variables:
+        result = result.rename({areavar: "area"})
 
     return result
 
@@ -387,6 +394,25 @@ def infer_dim_name(arr, dimlist):
     arrdim = [x for x in arr.dims if x in dimlist]
     assert len(arrdim) <= 1, f"Multiple dimensions found: {arrdim}"
     return arrdim[0] if len(arrdim) == 1 else None
+
+
+def infer_var_name(dset, varlist):
+    """Infers variable name from expected list
+
+    Parameters
+    ----------
+    dset : xarray.DataSet
+        Input dataset
+    varlist : list
+        List of expected/acceptable variables
+
+    Returns
+    -------
+    str
+    """
+    arrvar = [x for x in dset.variables if x in varlist]
+    assert len(arrvar) <= 1, f"Multiple variables found: {arrvar}"
+    return arrvar[0] if len(arrvar) == 1 else None
 
 
 def reorder_dims(arr):

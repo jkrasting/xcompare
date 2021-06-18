@@ -6,12 +6,13 @@ from .xcompare import (
     compare_datasets,
     dataset_vars,
     infer_dim_name,
+    infer_var_name,
     ordered_list_extraction,
     reorder_dims,
     equal_horiz_dims,
     extract_var_from_dataset,
 )
-from .xcompare import LON_DIMS, LAT_DIMS, Z_DIMS, TIME_DIMS
+from .xcompare import LON_DIMS, LAT_DIMS, Z_DIMS, TIME_DIMS, AREA_VARS
 
 
 def xr_times_from_tuples(timetuple, boundstuple, timefmt="gfdl"):
@@ -152,7 +153,7 @@ arr3d = xr.DataArray(
 arr2d = arr3d.mean(dim="depth").squeeze()
 ds1["varname1"] = arr3d
 ds1["varname2"] = arr2d
-ds1["area"] = arr2d.isel(time=0).squeeze()
+ds1["areacella"] = arr2d.isel(time=0).squeeze()
 
 
 ds2 = generate_annual_time_axis(1, 5)
@@ -170,7 +171,7 @@ arr2d = arr3d.mean(dim="depth").squeeze()
 ds2 = xr.Dataset()
 ds2["varname1"] = arr3d
 ds2["varname2"] = arr2d
-ds2["area"] = arr2d.isel(time=0).squeeze()
+ds2["areacello"] = arr2d.isel(time=0).squeeze()
 
 
 @pytest.mark.parametrize(
@@ -180,6 +181,11 @@ ds2["area"] = arr2d.isel(time=0).squeeze()
 def test_infer_dim_name(dimlist, varname):
     result = infer_dim_name(arr3d, dimlist)
     assert result == varname
+
+
+def test_infer_var_name():
+    result = infer_var_name(ds1, AREA_VARS)
+    assert result == "areacella"
 
 
 @pytest.mark.parametrize(
@@ -265,7 +271,7 @@ def test_compare_datasets_3():
 def test_dataset_vars():
     result = dataset_vars(ds1)
     assert sorted(result) == [
-        "area",
+        "areacella",
         "average_DT",
         "average_T1",
         "average_T2",
