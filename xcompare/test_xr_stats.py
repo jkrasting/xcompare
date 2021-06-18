@@ -42,7 +42,10 @@ def test_xr_stats_2d(fmt, fmttype):
 
     arr1 = xr.DataArray(rng1.random((20, 20)))
     arr2 = xr.DataArray(rng2.random((20, 20)))
-    area = xr.DataArray(rng3.random((20, 20)))
+
+    area = rng3.random((20, 20))
+    area[5, 5] = np.nan
+    area = xr.DataArray(area)
 
     result = xr_stats_2d(arr1, arr2, area, fmt=fmt)
 

@@ -78,13 +78,14 @@ def xr_stats_2d(arr1, arr2, area, fmt="list"):
     # load arrays into memory to prevent any warnings later
     arr1.load()
     arr2.load()
+    area.load()
     # the two arrays may have different valid data masks
     # get the union of masks from both arrays
     mask = xr.where(arr1.isnull(), 0.0, 1.0) * xr.where(arr2.isnull(), 0.0, 1.0)
     # fill all NaNs with zeros and apply the unified mask to all arrays
     _arr1 = arr1.fillna(0.0) * mask
     _arr2 = arr2.fillna(0.0) * mask
-    _area = area * mask
+    _area = area.fillna(0.0) * mask
     # calculate difference of arrays
     diff = _arr1 - _arr2
     # calculate area-weighted bias
