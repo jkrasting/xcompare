@@ -248,13 +248,13 @@ def test_compare_datasets_2():
     )
     result = result["diff"]
 
-    assert np.allclose(result.varname1.attrs["bias"], 0.0063351442236037996)
-    assert np.allclose(result.varname1.attrs["rmse"], 0.13973523906301774)
-    assert np.allclose(result.varname1.attrs["rsquared"], 0.06439114666844571)
+    assert np.allclose(result.varname1.attrs["bias"], -0.0878525676497386)
+    assert np.allclose(result.varname1.attrs["rmse"], 0.1929865013387339)
+    assert np.allclose(result.varname1.attrs["rsquared"], -0.0209345804727127)
 
-    assert np.allclose(result.varname2.attrs["bias"], 0.0031753039070744104)
-    assert np.allclose(result.varname2.attrs["rmse"], 0.08174864295535195)
-    assert np.allclose(result.varname2.attrs["rsquared"], -0.10642072198515153)
+    assert np.allclose(result.varname2.attrs["bias"], -0.0906134824978717)
+    assert np.allclose(result.varname2.attrs["rmse"], 0.1433717794017723)
+    assert np.allclose(result.varname2.attrs["rsquared"], -0.0432083346534093)
 
 
 def test_compare_datasets_3():
@@ -264,7 +264,7 @@ def test_compare_datasets_3():
     result = compare_datasets(_ds1, _ds2)
     result = result["diff"]
 
-    answers = np.array([-0.04260492, 0.0158457, 0.01407919, 0.019594, -0.02629822])
+    answers = np.array([-0.1097941, -0.0547705, -0.0717734, -0.0506908, -0.0791244])
     assert np.allclose(np.array(result["varname1"].mean(axis=(-2, -1))), answers)
 
 

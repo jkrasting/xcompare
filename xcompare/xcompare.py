@@ -115,7 +115,7 @@ def compare_datasets(ds1, ds2, varlist=None, timeavg=False):
     else:
         ds1.load()
         ds2.load()
-        if np.multiply(*ds1[varlist[0]].shape[-2::]) > np.multiply(
+        if np.multiply(*ds1[varlist[0]].shape[-2::]) < np.multiply(
             *ds2[varlist[0]].shape[-2::]
         ):
             regridder = xe.Regridder(ds1, ds2, "bilinear")
