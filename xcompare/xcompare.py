@@ -334,6 +334,39 @@ def extract_var_from_dataset(ds, varlist=None):
                 ("lat", ds["geolat"]) if x[0] == "yh" else (x[0], x[1]) for x in coords
             ]
             rename_latlon_coords = False
+        elif horiz_coord == ("xq", "yq"):
+            result["area"] = ds["areacello_bu"]
+            coords = [
+                ("lon", ds["geolon_c"]) if x[0] == "xq" else (x[0], x[1])
+                for x in coords
+            ]
+            coords = [
+                ("lat", ds["geolat_c"]) if x[0] == "yq" else (x[0], x[1])
+                for x in coords
+            ]
+            rename_latlon_coords = False
+        elif horiz_coord == ("xq", "yh"):
+            result["area"] = ds["areacello_cu"]
+            coords = [
+                ("lon", ds["geolon_u"]) if x[0] == "xq" else (x[0], x[1])
+                for x in coords
+            ]
+            coords = [
+                ("lat", ds["geolat_v"]) if x[0] == "yh" else (x[0], x[1])
+                for x in coords
+            ]
+            rename_latlon_coords = False
+        elif horiz_coord == ("xh", "yq"):
+            result["area"] = ds["areacello_bv"]
+            coords = [
+                ("lon", ds["geolon_c"]) if x[0] == "xh" else (x[0], x[1])
+                for x in coords
+            ]
+            coords = [
+                ("lat", ds["geolat_c"]) if x[0] == "yq" else (x[0], x[1])
+                for x in coords
+            ]
+            rename_latlon_coords = False
         else:
             rename_latlon_coords = True
 
