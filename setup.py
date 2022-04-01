@@ -1,5 +1,6 @@
 """ setup script """
 import setuptools
 
-setuptools.setup()
+exec(open("xcompare/version.py").read())
 
+setuptools.setup(version=__version__)
