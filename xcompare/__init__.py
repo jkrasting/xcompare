@@ -2,6 +2,7 @@
 
 from .version import __version__
 
+from . import compare_xy
 from . import coord_util
 from . import standard_grid
 
