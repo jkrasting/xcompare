@@ -74,6 +74,7 @@ def determine_target(ds1, ds2, resolution=None):
 
     elif resolution == "common":
         target = generate_standard_grid()
+        source = None
 
     elif resolution is None:
         source = ds1
@@ -120,7 +121,8 @@ def compare_datasets(
                     comp,
                     target,
                     "bilinear",
-                    weights=weights,  # , unmapped_to_nan=True,
+                    weights=weights,
+                    unmapped_to_nan=True,
                 )
             except Exception as exception:
                 if weights is not None:
