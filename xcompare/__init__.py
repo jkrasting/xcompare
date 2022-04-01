@@ -2,6 +2,7 @@
 
 from .version import __version__
 
+from . import coord_util
 from . import plot
 from . import xr_stats
 from . import xcompare
