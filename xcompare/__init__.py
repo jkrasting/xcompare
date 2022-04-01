@@ -6,6 +6,8 @@ from . import compare_xy
 from . import coord_util
 from . import standard_grid
 
+from .Compare import Compare
+
 from . import plot
 from . import xr_stats
 from . import xcompare
