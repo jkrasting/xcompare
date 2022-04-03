@@ -7,8 +7,26 @@ __all__ = ["cell_area", "generate_standard_grid", "grid_area"]
 
 
 def cell_area(corners, radius_earth=6371.0e3):
+    """Function to calculate cell area on a spherical grid
 
-    # caluculates cell area given 4 corners (x0,x1,y0,y1)
+    Calculates cell area given an array of 4 corners [x0,x1,y0,y1]
+
+    Parameters
+    ----------
+    corners : numpy.ndarray
+        Cell corners in degrees - [x0,x1,y0,y1]
+    radius_earth : float, optional
+        Radius of the Earth, by default 6371.0e3 m
+
+    Returns
+    -------
+    numpy.float64
+        Cell area in units of m2
+
+    See Also
+    --------
+    grid_area : generated 2-dimensional field of cell areas
+    """
 
     assert len(corners) == 4
 
@@ -22,14 +40,39 @@ def cell_area(corners, radius_earth=6371.0e3):
 
 
 def generate_standard_grid(delta_x=1.0, delta_y=1.0):
+    """Function to generate a standard grid dataset
 
-    # generates xarray dataset with a standard lat-lon grid
+    This function generates an xarray dataset with lat/lon coordinates and
+    bounds generated on a standard spherical grid. The corresponding cell
+    area field is also returned. The resulting dataset is CF-compliant
+
+    The default resolution is 1x1-degree but any values for dx and dy can
+    be given as long as the longitude and latitude coordinates are evenly
+    divisible by dx and dy.
+
+    Parameters
+    ----------
+    delta_x : float, optional
+        Longitudinal resolution in degrees, by default 1.0
+    delta_y : float, optional
+        Latitudinal resolution in degrees, by default 1.0
+
+    Returns
+    -------
+    xarray.core.dataset.Dataset
+        CF-compliant dataset on a standard spherical grid
+
+    See Also
+    --------
+    grid_area : generates cell area field
+    """
 
     assert (
         np.mod(360.0, delta_x) == 0.0
     ), "Longitude must by evenly divisible by delta_x"
     assert np.mod(180.0, delta_y) == 0.0, "Latitude must by evenly divisible by delta_y"
 
+    # generates xarray dataset with a standard lat-lon grid
     lat = xr.DataArray(np.arange(-90.0 + (delta_y / 2), 90.0, delta_y), dims="lat")
     lat.attrs = {
         "long_name": "latitude",
@@ -90,11 +133,31 @@ def generate_standard_grid(delta_x=1.0, delta_y=1.0):
 
 
 def grid_area(lat, lon):
+    """Function to generate a 2-dimensional gridded array of cell areas
 
-    # calcualted a gridded field of cell areas given vectors of lat and lon
+    Given 1-dimensional arrays for latitude and longitude  (in degrees), this
+    function returns a 2-dimensional array of cell areas
+
+    Parameters
+    ----------
+    lat : numpy.ndarray
+        Latitude coordinate vector in degrees
+    lon : numpy.ndarray
+        Longitude coordinate vector in degrees
+
+    Returns
+    -------
+    numpy.ndarray
+        Two dimensional array of cell areas
+
+    See Also
+    --------
+    cell_area : calculates individual grid cell areas
+    """
 
     num_y = len(lat)
     num_x = len(lon)
+    # calcualted a gridded field of cell areas given vectors of lat and lon
 
     delta_y = list(set(np.diff(lat)))
     delta_x = list(set(np.diff(lon)))
