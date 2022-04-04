@@ -6,6 +6,8 @@ import xarray as xr
 
 __all__ = [
     "associate_ocean_coords",
+    "associate_ocean_coords_array",
+    "associate_ocean_coords_dataset",
     "extract_dimset",
     "identical_xy_coords",
     "list_dset_dimset",
@@ -15,7 +17,46 @@ __all__ = [
 ]
 
 
-def associate_ocean_coords(arr, static=None, prefix=None):
+def associate_ocean_coords(obj, static, prefix=None):
+    """Function to associate ocean coordinates with an xarray object
+
+    MOM-specific function to associate grid info with an xarray object.
+    This function adds appropriate geo coords, cell area, and wet masks.
+    It also sets integer nominal coords.
+
+    Parameters
+    ----------
+    obj : xarray.core.dataarray.DataArray, xarray.core.dataset.Dataset
+        Input xarray object
+    static : xarray.core.dataset.Dataset
+        Static dataset containing grid information
+    prefix : str, list, optional
+        Variable prefixes to associate, by default
+        ["geolon", "geolat", "area", "wet"]
+
+    Returns
+    -------
+    xarray.core.dataarray.DataArray, xarray.core.dataset.Dataset
+        Xarray object with associated coordinates
+
+    See Also
+    --------
+    reset_nominal_coords : sets integer nominal coordinates
+    associate_ocean_coords_array : associates coordinates for DataArray objects
+    associate_ocean_coords_dataset : associates coordinates for Dataset objects
+    """
+
+    if isinstance(obj, xr.DataArray):
+        result = associate_ocean_coords_array(obj, static, prefix=prefix)
+    elif isinstance(obj, xr.Dataset):
+        result = associate_ocean_coords_dataset(obj, static)
+    else:
+        raise ValueError("Input object must be xarray DataArray or Dataset")
+
+    return result
+
+
+def associate_ocean_coords_array(arr, static, prefix=None):
     """Function to associate ocean coordinates with a data array
 
     MOM-specific function to associate grid info with DataArray object.
@@ -83,6 +124,56 @@ def associate_ocean_coords(arr, static=None, prefix=None):
         arr.coords[k] = static[k]
 
     return arr
+
+
+def associate_ocean_coords_dataset(dset, static):
+    """Function to associate ocean coordinates with a dataset
+
+    MOM-specific function to associate grid info with Dataset object.
+    This function adds appropriate geo coords, cell area, and wet masks.
+    It also sets integer nominal coords.
+
+    Parameters
+    ----------
+    dset : xarray.core.dataset.Dataset
+        Input dataset
+    static : xarray.core.dataset.Dataset
+        Static dataset containing grid information
+
+    Returns
+    -------
+    xarray.core.dataset.Dataset
+        Data array with associated coordinates
+
+    See Also
+    --------
+    reset_nominal_coords : sets integer nominal coordinates
+    """
+
+    assert isinstance(
+        dset, xr.Dataset
+    ), "Input to this function must be an xarray Dataset"
+
+    dimset = list_dset_dimset(dset)
+    static = extract_dimset(static, dimset)
+
+    dset = dset.copy().squeeze()
+
+    static_varlist = []
+    for var in list(static.keys()):
+        if var not in list(dset.keys()):
+            dset[var] = static[var]
+            static_varlist.append(var)
+        else:
+            warnings.warn(
+                f"Static variable {var} already exists in dataset ... skipping"
+            )
+
+    dset.attrs = {**dset.attrs, "static_fields": static_varlist}
+
+    dset = reset_nominal_coords(dset)
+
+    return dset
 
 
 def extract_dimset(dset, dimset):

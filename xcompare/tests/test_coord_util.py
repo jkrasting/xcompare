@@ -83,7 +83,7 @@ def test_reset_nominal_coords_2():
     assert result.yh.max() == 36
 
 
-def test_associate_ocean_coords():
+def test_associate_ocean_coords_1():
     """tests that ocean static coords are associated with data array"""
     result = coord_util.associate_ocean_coords(dset1.random, static=static)
     assert result.xh.min() == 1
@@ -91,6 +91,18 @@ def test_associate_ocean_coords():
     assert result.yh.min() == 1
     assert result.yh.max() == 36
     assert len(result.coords) == 7
+
+
+def test_associate_ocean_coords_2():
+    """tests that ocean static coords are associated with dataset"""
+    result = coord_util.associate_ocean_coords(dset1, static)
+    assert result.xh.min() == 1
+    assert result.xh.max() == 72
+    assert result.yh.min() == 1
+    assert result.yh.max() == 36
+    print(sorted(result.attrs["static_fields"]))
+    answer = ["area_t", "areacello", "depth_ocean", "geolat", "geolon", "wet"]
+    assert sorted(result.attrs["static_fields"]) == answer
 
 
 def test_rename_coords_xy_1():
