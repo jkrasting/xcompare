@@ -13,11 +13,31 @@ __all__ = [
 
 
 def associate_ocean_coords(arr, static=None, prefix=None):
+    """Function to associate ocean coordinates with a data array
 
-    # MOM-specific function to associate grid info with DataArray object
-    # Adds appropriate geo coords, cell area, and wet masks
-    # Sets integer nominal coords
-    # See also: reset_nominal_coords
+    MOM-specific function to associate grid info with DataArray object.
+    This function adds appropriate geo coords, cell area, and wet masks.
+    It also sets integer nominal coords.
+
+    Parameters
+    ----------
+    arr : xarray.core.dataarray.DataArray
+        Input data array
+    static : xarray.core.dataset.Dataset
+        Static dataset containing grid information
+    prefix : str, list, optional
+        Variable prefixes to associate, by default
+        ["geolon", "geolat", "area", "wet"]
+
+    Returns
+    -------
+    xarray.core.dataarray.DataArray
+        Data array with associated coordinates
+
+    See Also
+    --------
+    reset_nominal_coords : sets integer nominal coordinates
+    """
 
     prefix = ["geolon", "geolat", "area", "wet"] if prefix is None else prefix
 
@@ -62,18 +82,46 @@ def associate_ocean_coords(arr, static=None, prefix=None):
     return arr
 
 
-def identical_xy_coords(ds1, ds2):
+def identical_xy_coords(ds1, ds2, xcoord="lon", ycoord="lat"):
+    """Function to test if datasets have identical xy coordinates
 
-    # Tests if two datasets have the same xy coorindates
-    # Requires that the datasets be renamed to lat/lon
-    # See also: rename_coords_xy
+    Parameters
+    ----------
+    ds1 : xarray.core.dataset.Dataset
+        First input dataset
+    ds2 : xarray.core.dataset.Dataset
+        Second input dataset
+    xcoord : str, optional
+        Name of x-coordinate, by default "lon"
+    ycoord : str
+        Name of y-coordinate, by default "lat"
 
-    result = bool(ds1.lon.equals(ds2.lon) & ds1.lat.equals(ds2.lat))
+    Returns
+    -------
+    bool
+        True if datasets have identical horizontal coordinates
+    """
+
+    result = bool(ds1[xcoord].equals(ds2[xcoord]) & ds1[ycoord].equals(ds2[ycoord]))
 
     return result
 
 
 def rename_coords_xy(*ds):
+    """Function to rename latitude and longitude coordinates
+
+    This function discovers CF-convention latitude and longitude
+    coordinates and renames them `lat` and `lon`, respectively
+
+    Parameters
+    ----------
+    ds : xarray.core.dataset.Dataset, or list
+        Input datasets to rename
+
+    Returns
+    -------
+    xarray.core.dataset.Dataset
+    """
 
     # rename lat/lon variables, xesmf expects specific names
 
@@ -82,18 +130,32 @@ def rename_coords_xy(*ds):
         x.rename({x.cf["longitude"].name: "lon", x.cf["latitude"].name: "lat"})
         for x in ds
     ]
-    return tuple(ds)
+    result = ds[0] if len(ds) == 1 else tuple(ds)
+
+    return result
 
 
 def reset_nominal_coords(obj, coords=None):
+    """Function to reset nominal coordinates
 
-    # Function to set nominal coordinates to integer values
-    # This function resets the nominal coordinates to integer values
-    # and copies associated metadata. This function can be used on
-    # either a DataArray or a Dataset object
-    #
-    # obj : input xarray object
-    # coords : str, or iterable of coords to reset
+    This function resets nominal 1-D coordinates to integer values.
+    These coordinates are typically found to accompany 2-D lat/lon
+    coordinates that are common in curvilinear grids.
+
+    The function sets the nominal coordinates to a monotonically
+    increasing array of integer values.
+
+    Parameters
+    ----------
+    obj : xarray.core.dataset.Dataset, or xarray.core.dataarray.DataArray
+        Input xarray object
+    coords : str, list
+        Coordinate names to reset, by default ["xh", "yh", "xq", "yq"]
+
+    Returns
+    -------
+    Union[xarray.core.dataset.Dataset, xarray.core.dataarray.DataArray]
+    """
 
     coords = ["xh", "yh", "xq", "yq"] if coords is None else coords
     coords = list(coords) if isinstance(coords, tuple) else coords
