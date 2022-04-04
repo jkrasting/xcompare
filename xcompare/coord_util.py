@@ -8,6 +8,7 @@ __all__ = [
     "associate_ocean_coords",
     "associate_ocean_coords_array",
     "associate_ocean_coords_dataset",
+    "dims_to_geo_coords",
     "extract_dimset",
     "fix_bounds_attributes",
     "identical_xy_coords",
@@ -152,6 +153,9 @@ def associate_ocean_coords_dataset(dset, static):
     reset_nominal_coords : sets integer nominal coordinates
     """
 
+    dset = reset_nominal_coords(dset)
+    static = reset_nominal_coords(static)
+
     assert isinstance(
         dset, xr.Dataset
     ), "Input to this function must be an xarray Dataset"
@@ -166,6 +170,13 @@ def associate_ocean_coords_dataset(dset, static):
         if var not in list(dset.keys()):
             dset[var] = static[var]
             static_varlist.append(var)
+
+            if var.startswith("geolat"):
+                dset[var].attrs["standard_name"] = "latitude"
+
+            if var.startswith("geolon"):
+                dset[var].attrs["standard_name"] = "longitude"
+
         else:
             warnings.warn(
                 f"Static variable {var} already exists in dataset ... skipping"
@@ -173,9 +184,61 @@ def associate_ocean_coords_dataset(dset, static):
 
     dset.attrs = {**dset.attrs, "static_fields": static_varlist}
 
-    dset = reset_nominal_coords(dset)
+    dimset = list_dset_dimset(dset)
+    dsout = []
+    for dim in dimset:
+        _dsout = xr.Dataset()
+        _ds = extract_dimset(dset, dim)
+        geocoords = dims_to_geo_coords(dset, dim)
+        for var in set(_ds.keys()) - set(geocoords):
+            _dsout[var] = _ds[var].assign_coords(
+                {geocoords[0]: _ds[geocoords[0]], geocoords[1]: _ds[geocoords[1]]}
+            )
+        dsout.append(_dsout)
 
-    return dset
+    dsout = xr.merge(dsout)
+    dsout.attrs = dset.attrs
+
+    return dsout
+
+
+def dims_to_geo_coords(dset, dims):
+    """Function to associate dimensions to geocentric coordinates
+
+    This function accepts an xarray dataset and returns the geocentric
+    coordinates (e.g. geolon/geolat) associated with a tuple of dimension names
+
+    Parameters
+    ----------
+    dset : xarray.core.dataset.Dataset
+        Input dataset
+    dims : tuple(str,str)
+        Dimension names, e.g. ("yh","xh")
+
+    Returns
+    -------
+    xarray.core.dataset.Dataset
+        Data array with associated coordinates
+    """
+
+    assert len(dims) == 2
+
+    dim = dims[0]
+    geoname = "geolon" if dim[0] == "x" else "geolat"
+    candidate_0 = [
+        x for x in dset.variables if (x.startswith(geoname) and dset[x].dims == dims)
+    ]
+
+    dim = dims[1]
+    geoname = "geolon" if dim[0] == "x" else "geolat"
+    candidate_1 = [
+        x for x in dset.variables if (x.startswith(geoname) and dset[x].dims == dims)
+    ]
+
+    assert len(candidate_0) == 1
+    assert len(candidate_1) == 1
+
+    return (candidate_0[0], candidate_1[0])
 
 
 def extract_dimset(dset, dimset):
@@ -229,23 +292,41 @@ def fix_bounds_attributes(obj):
     """
 
     obj = obj.copy()
+    coords = set(obj.cf.coordinates.keys())
 
     potential_bounds = []
-    for coord in ["latitude", "longitude"]:
-        res = obj.cf[[coord]]
-        variables = list(res.variables)
+
+    for coord in coords.intersection({"latitude", "longitude"}):
+
+        if isinstance(obj, xr.Dataset):
+            res = obj.cf[[coord]]
+            variables = list(res.variables)
+        else:
+            res = obj.cf[coord]
+            variables = [res.name]
 
         bounds_attr_names = ["edges", "bounds"]
         for var in variables:
             for bounds_attr in bounds_attr_names:
-                if bounds_attr in res[var].attrs.keys():
-                    potential_bounds.append(res[var].attrs[bounds_attr])
+
+                if isinstance(obj, xr.Dataset):
+                    if bounds_attr in res[var].attrs.keys():
+                        potential_bounds.append(res[var].attrs[bounds_attr])
+                else:
+                    if bounds_attr in obj.coords[var].attrs.keys():
+                        potential_bounds.append(obj.coords[var].attrs[bounds_attr])
 
     remove_attrs = ["axis", "cartesian_axis", "units"]
     for var in potential_bounds:
         for attr in remove_attrs:
-            if attr in obj[var].attrs.keys():
-                del obj[var].attrs[attr]
+
+            if isinstance(obj, xr.Dataset):
+                if attr in obj[var].attrs.keys():
+                    del obj[var].attrs[attr]
+            else:
+                if var in obj.coords:
+                    if attr in obj.coords[var].attrs.keys():
+                        del obj.coords[var].attrs[attr]
 
     return obj
 
@@ -294,9 +375,11 @@ def infer_coordinate_system(obj):
     obj = obj.copy()
 
     if isinstance(obj, xr.DataArray):
-        obj = xr.Dataset({"array": obj})
+        obj = xr.Dataset({"array": obj, **obj.coords})
+        for coord in obj.coords:
+            if "bounds" in obj.coords[coord].attrs.keys():
+                del obj.coords[coord].attrs["bounds"]
 
-    obj = fix_bounds_attributes(obj)
     obj = obj.squeeze().reset_coords(drop=True)
 
     used_coords = []
@@ -315,20 +398,20 @@ def infer_coordinate_system(obj):
     except KeyError:
         pass
 
-    try:
-        xcoord = obj.cf[["longitude"]].coords
-        xcoord = str(",").join(list(xcoord))
-    except KeyError:
-        xcoord = None
+    # try:
+    xcoord = obj.cf[["X"]].coords
+    xcoord = str(",").join(list(xcoord))
+    # except KeyError:
+    #    xcoord = None
 
     try:
-        ycoord = obj.cf[["latitude"]].coords
+        ycoord = obj.cf[["Y"]].coords
         ycoord = str(",").join(list(ycoord))
     except KeyError:
         ycoord = None
 
     try:
-        zcoord = obj.cf[["vertical"]].coords
+        zcoord = obj.cf[["Z"]].coords
         zcoord = str(",").join(list(zcoord))
     except KeyError:
         zcoord = None
@@ -369,7 +452,7 @@ def list_dset_dimset(dset):
     List[Tuple[str, str]]
         List of coordinate pairings, e.g. [("yh","xh"),("yq","xq")]
     """
-    dset = dset.squeeze()
+    dset = dset.copy().squeeze()
     dims = [dset[x].dims for x in list(dset.keys())]
     dims = list(set(dims))
     dims = [x for x in dims if len(x) == 2]
@@ -442,6 +525,12 @@ def reset_nominal_coords(obj, coords=None):
         if "units" in result[coord].attrs.keys():
             del result[coord].attrs["units"]
 
+        # if coord in ["xh","xq"]:
+        #    result[coord].attrs["standard_name"] = "longitude"
+
+        # if coord in ["yh", "yq"]:
+        #    result[coord].attrs["standard_name"] = "latitude"
+
     return result
 
 
@@ -467,8 +556,8 @@ def valid_xy_dims(dset, dim):
     _ds = extract_dimset(dset, dim)
 
     try:
-        _ = _ds.cf["longitude"]
-        _ = _ds.cf["latitude"]
+        _ = _ds.cf[["X"]]
+        _ = _ds.cf[["Y"]]
         valid = True
 
     except KeyError:
