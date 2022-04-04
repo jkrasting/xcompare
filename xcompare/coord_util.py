@@ -11,6 +11,7 @@ __all__ = [
     "extract_dimset",
     "fix_bounds_attributes",
     "identical_xy_coords",
+    "infer_coordinate_system",
     "list_dset_dimset",
     "rename_coords_xy",
     "reset_nominal_coords",
@@ -270,6 +271,85 @@ def identical_xy_coords(ds1, ds2, xcoord="lon", ycoord="lat"):
     """
 
     result = bool(ds1[xcoord].equals(ds2[xcoord]) & ds1[ycoord].equals(ds2[ycoord]))
+
+    return result
+
+
+def infer_coordinate_system(obj):
+    """Function to determine coordinate system
+
+    This function determines the coordinate system of reference for
+    an xarray object.
+
+    Parameters
+    ----------
+    obj : xarray.core.dataset.Dataset, or xarray.core.dataarray.DataArray
+        Input xarray object
+
+    Returns
+    -------
+    str
+       Coordinates of object - "yx","zy", or "zx"
+    """
+    obj = obj.copy()
+
+    if isinstance(obj, xr.DataArray):
+        obj = xr.Dataset({"array": obj})
+
+    obj = fix_bounds_attributes(obj)
+    obj = obj.squeeze().reset_coords(drop=True)
+
+    used_coords = []
+    for var in obj.keys():
+        used_coords = used_coords + list(obj[var].coords)
+    used_coords = set(used_coords)
+    drop_list = list(set(obj.coords) - used_coords)
+    obj = obj.drop(drop_list)
+
+    try:
+        _ = obj.cf["time"]
+        raise KeyError(
+            "Time coordinate found. The package is only intended "
+            + "for two-dimensional (xy,yz) objects."
+        )
+    except KeyError:
+        pass
+
+    try:
+        xcoord = obj.cf[["longitude"]].coords
+        xcoord = str(",").join(list(xcoord))
+    except KeyError:
+        xcoord = None
+
+    try:
+        ycoord = obj.cf[["latitude"]].coords
+        ycoord = str(",").join(list(ycoord))
+    except KeyError:
+        ycoord = None
+
+    try:
+        zcoord = obj.cf[["vertical"]].coords
+        zcoord = str(",").join(list(zcoord))
+    except KeyError:
+        zcoord = None
+
+    poss_coords = [(ycoord, xcoord), (zcoord, ycoord), (zcoord, xcoord)]
+
+    bad_coords = [x for x in poss_coords if x[0] is None or x[1] is None]
+    coords = list((set(poss_coords) - set(bad_coords)))
+
+    assert (
+        len(coords) == 1
+    ), "Dataset has incorrect number of coordinates. Must contain only (x,y) or (y,z) coords."
+
+    if coords == [(ycoord, xcoord)]:
+        result = "yx"
+    elif coords == [(zcoord, ycoord)]:
+        result = "zy"
+    elif coords == [(zcoord, xcoord)]:
+        result = "zx"
+    else:
+        raise RuntimeError("Catastrophic failure of coordinate inference")
 
     return result
 

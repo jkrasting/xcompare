@@ -56,6 +56,12 @@ def test_fix_bounds_attributes():
     assert "axis" not in result.lat_bnds.attrs.keys()
 
 
+def test_infer_coordinate_system():
+    """ tests coordinate inference function """
+    assert coord_util.infer_coordinate_system(dset1) == "yx"
+    assert coord_util.infer_coordinate_system(dset1.random) == "yx"
+
+
 def test_identical_xy_coords_2():
     """tests function that evaluates if coords area equal in data arrays"""
     assert coord_util.identical_xy_coords(
