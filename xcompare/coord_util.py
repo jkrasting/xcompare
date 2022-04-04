@@ -9,6 +9,7 @@ __all__ = [
     "associate_ocean_coords_array",
     "associate_ocean_coords_dataset",
     "extract_dimset",
+    "fix_bounds_attributes",
     "identical_xy_coords",
     "list_dset_dimset",
     "rename_coords_xy",
@@ -206,6 +207,46 @@ def extract_dimset(dset, dimset):
         ds_out[var] = dset[var]
 
     return ds_out
+
+
+def fix_bounds_attributes(obj):
+    """Function to fix incorrect bounds attributes
+
+    Some bounds variables incorrectly include an "axis" or "cartesian_axis"
+    attribute that is not CF-compliant. This function removes those
+    attributes if present
+
+    Parameters
+    ----------
+    obj : xarray.core.dataset.Dataset, or xarray.core.dataarray.DataArray
+        Input xarray object
+
+    Returns
+    -------
+    xarray.core.dataset.Dataset, or xarray.core.dataarray.DataArray
+        Object with corrected bounds attributes
+    """
+
+    obj = obj.copy()
+
+    potential_bounds = []
+    for coord in ["latitude", "longitude"]:
+        res = obj.cf[[coord]]
+        variables = list(res.variables)
+
+        bounds_attr_names = ["edges", "bounds"]
+        for var in variables:
+            for bounds_attr in bounds_attr_names:
+                if bounds_attr in res[var].attrs.keys():
+                    potential_bounds.append(res[var].attrs[bounds_attr])
+
+    remove_attrs = ["axis", "cartesian_axis", "units"]
+    for var in potential_bounds:
+        for attr in remove_attrs:
+            if attr in obj[var].attrs.keys():
+                del obj[var].attrs[attr]
+
+    return obj
 
 
 def identical_xy_coords(ds1, ds2, xcoord="lon", ycoord="lat"):

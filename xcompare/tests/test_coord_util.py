@@ -6,6 +6,7 @@ import numpy as np
 import xarray as xr
 
 from xcompare import coord_util
+from xcompare import standard_grid
 
 URL = (
     "https://github.com/jkrasting/mdtf_test_data/raw/main/"
@@ -30,6 +31,8 @@ random2 = xr.DataArray(
 )
 dset2 = xr.Dataset({"random": random2})
 
+dset3 = standard_grid.generate_standard_grid()
+
 
 def test_identical_xy_coords_1():
     """tests function that evaluates if coords area equal in datasets"""
@@ -42,6 +45,15 @@ def test_extract_dimset():
     result = coord_util.extract_dimset(static, ("yq", "xh"))
     answer = ["geolat_v", "geolon_v", "wet_v"]
     assert sorted(result.keys()) == answer
+
+
+def test_fix_bounds_attributes():
+    """tests the removal of incorrect axis attributes in bounds variables"""
+    dset3.lon_bnds.attrs = {**dset3.lon_bnds.attrs, "axis": "X"}
+    dset3.lat_bnds.attrs = {**dset3.lat_bnds.attrs, "axis": "Y"}
+    result = coord_util.fix_bounds_attributes(dset3)
+    assert "axis" not in result.lon_bnds.attrs.keys()
+    assert "axis" not in result.lat_bnds.attrs.keys()
 
 
 def test_identical_xy_coords_2():
