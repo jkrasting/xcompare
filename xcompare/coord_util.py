@@ -6,9 +6,12 @@ import xarray as xr
 
 __all__ = [
     "associate_ocean_coords",
+    "extract_dimset",
     "identical_xy_coords",
+    "list_dset_dimset",
     "rename_coords_xy",
     "reset_nominal_coords",
+    "valid_xy_dims",
 ]
 
 
@@ -82,6 +85,38 @@ def associate_ocean_coords(arr, static=None, prefix=None):
     return arr
 
 
+def extract_dimset(dset, dimset):
+    """Function to subset a dataset based on coordinates
+
+    This function accepts a dimension paring and returns all
+    variables in the source dataset that match that dimension pairing
+
+    Parameters
+    ----------
+    dset : xarray.core.dataset.Dataset
+        Input dataset
+    dimset : Tuple[str, str]
+        Dimension pair, e.g. ("yh","xh")
+
+    Returns
+    -------
+    xarray.core.dataset.Dataset
+        Subset of source dataset with variables that match dimension pairing
+    """
+    dimset = [dimset] if not isinstance(dimset, list) else dimset
+    dset = dset.squeeze()
+    ds_out = xr.Dataset()
+
+    # this used to be in a for loop ...
+    # for dim in dimset:
+
+    varlist = [x for x in list(dset.keys()) if dset[x].dims in dimset]
+    for var in varlist:
+        ds_out[var] = dset[var]
+
+    return ds_out
+
+
 def identical_xy_coords(ds1, ds2, xcoord="lon", ycoord="lat"):
     """Function to test if datasets have identical xy coordinates
 
@@ -105,6 +140,29 @@ def identical_xy_coords(ds1, ds2, xcoord="lon", ycoord="lat"):
     result = bool(ds1[xcoord].equals(ds2[xcoord]) & ds1[ycoord].equals(ds2[ycoord]))
 
     return result
+
+
+def list_dset_dimset(dset):
+    """Function to resolve xy coordinate pairings in a dataset
+
+    This function returns valid xy coordinate parings in a dataset
+
+    Parameters
+    ----------
+    dset : xarray.core.dataset.Dataset
+        Input dataset
+
+    Returns
+    -------
+    List[Tuple[str, str]]
+        List of coordinate pairings, e.g. [("yh","xh"),("yq","xq")]
+    """
+    dset = dset.squeeze()
+    dims = [dset[x].dims for x in list(dset.keys())]
+    dims = list(set(dims))
+    dims = [x for x in dims if len(x) == 2]
+    dims = [x for x in dims if valid_xy_dims(dset, x)]
+    return dims
 
 
 def rename_coords_xy(*ds):
@@ -173,3 +231,35 @@ def reset_nominal_coords(obj, coords=None):
             del result[coord].attrs["units"]
 
     return result
+
+
+def valid_xy_dims(dset, dim):
+    """Function to determine if xy coordinates are valid
+
+    This function tests if the specified xy coordinates are valid
+    and CF-compliant
+
+    Parameters
+    ----------
+    dset : xarray.core.dataset.Dataset
+        Input dataset
+    dim : Tuple[str, str]
+        Set of dimensions, e.g. ("yh","xh")
+
+    Returns
+    -------
+    bool
+        True if coordinates are valid and compliant
+    """
+
+    _ds = extract_dimset(dset, dim)
+
+    try:
+        _ = _ds.cf["longitude"]
+        _ = _ds.cf["latitude"]
+        valid = True
+
+    except KeyError:
+        valid = False
+
+    return valid

@@ -37,6 +37,13 @@ def test_identical_xy_coords_1():
     assert not coord_util.identical_xy_coords(dset1, dset2, xcoord="xh", ycoord="yh")
 
 
+def test_extract_dimset():
+    """tests extraction of variables from dataset based on dimensionality"""
+    result = coord_util.extract_dimset(static, ("yq", "xh"))
+    answer = ["geolat_v", "geolon_v", "wet_v"]
+    assert sorted(result.keys()) == answer
+
+
 def test_identical_xy_coords_2():
     """tests function that evaluates if coords area equal in data arrays"""
     assert coord_util.identical_xy_coords(
@@ -45,6 +52,13 @@ def test_identical_xy_coords_2():
     assert not coord_util.identical_xy_coords(
         dset1.random, dset2.random, xcoord="xh", ycoord="yh"
     )
+
+
+def test_list_dset_dimset():
+    """tests discovery of dimension pairings in a dataset"""
+    result = sorted(coord_util.list_dset_dimset(static))
+    answer = [("yh", "xh"), ("yh", "xq"), ("yq", "xh"), ("yq", "xq")]
+    assert result == answer
 
 
 def test_reset_nominal_coords_1():
@@ -98,3 +112,8 @@ def test_rename_coords_xy_2():
     arr = coord_util.rename_coords_xy(arr)
     assert "lat" in arr.coords
     assert "lon" in arr.coords
+
+
+def test_valid_xy_dims():
+    """tests function to determine if xy coords are CF-compliant/valid"""
+    assert coord_util.valid_xy_dims(static, ("yh", "xh"))
