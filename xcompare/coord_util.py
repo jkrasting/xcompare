@@ -14,6 +14,7 @@ __all__ = [
     "identical_xy_coords",
     "infer_coordinate_system",
     "list_dset_dimset",
+    "remove_unused_bounds_attrs",
     "rename_coords_xy",
     "reset_nominal_coords",
     "valid_xy_dims",
@@ -298,12 +299,8 @@ def fix_bounds_attributes(obj):
 
     for coord in coords.intersection({"latitude", "longitude"}):
 
-        if isinstance(obj, xr.Dataset):
-            res = obj.cf[[coord]]
-            variables = list(res.variables)
-        else:
-            res = obj.cf[coord]
-            variables = [res.name]
+        res = obj.cf[[coord]] if isinstance(obj, xr.Dataset) else obj.cf[coord]
+        variables = list(res.variables) if isinstance(obj, xr.Dataset) else [res.name]
 
         bounds_attr_names = ["edges", "bounds"]
         for var in variables:
@@ -456,8 +453,47 @@ def list_dset_dimset(dset):
     dims = [dset[x].dims for x in list(dset.keys())]
     dims = list(set(dims))
     dims = [x for x in dims if len(x) == 2]
+    print(dims)
     dims = [x for x in dims if valid_xy_dims(dset, x)]
     return dims
+
+
+def remove_unused_bounds_attrs(obj):
+    """Function to remove unused bounds attributes
+
+    This function removes "bounds" attributes from xarray object coordinates
+    if the coordinates are no longer associated with the object
+
+    Parameters
+    ----------
+    obj : xarray.core.dataset.Dataset, or xarray.core.dataarray.DataArray
+        Input xarray object
+
+    Returns
+    -------
+     xarray.core.dataset.Dataset, or xarray.core.dataarray.DataArray
+    """
+
+    obj = obj.copy()
+
+    coords = list(obj.coords)
+    bounds = {
+        x: obj.coords[x].attrs["bounds"]
+        for x in coords
+        if "bounds" in obj.coords[x].attrs.keys()
+    }
+
+    if isinstance(obj, xr.Dataset):
+        for key, val in bounds.items():
+            if val not in obj.keys():
+                del obj.coords[key].attrs["bounds"]
+
+    elif isinstance(obj, xr.DataArray):
+        for key, val in bounds.items():
+            if val not in coords:
+                del obj.coords[key].attrs["bounds"]
+
+    return obj
 
 
 def rename_coords_xy(*ds):
@@ -554,6 +590,7 @@ def valid_xy_dims(dset, dim):
     """
 
     _ds = extract_dimset(dset, dim)
+    _ds = remove_unused_bounds_attrs(_ds)
 
     try:
         _ = _ds.cf[["X"]]
