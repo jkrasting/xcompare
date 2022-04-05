@@ -9,6 +9,9 @@ __all__ = ["Compare"]
 
 
 class Compare:
+    """
+    Object class for comparing two xarray objects
+    """
     def __init__(
         self,
         obj1,
@@ -68,6 +71,20 @@ class Compare:
 
 
 def validate_objects(obj1, obj2):
+    """Function to validate input objects
+
+    This function determines if the two inputs are xarray objects and are
+    of the same type.
+
+    Parameters
+    ----------
+    obj1 : First input object
+    obj2 : Second input object
+
+    Returns
+    -------
+        Raises exception if these conditions are not met
+    """
 
     errors = []
 
