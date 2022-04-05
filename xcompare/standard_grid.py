@@ -97,7 +97,6 @@ def generate_standard_grid(delta_x=1.0, delta_y=1.0):
     lat_bnds.attrs = {
         "long_name": "latitude bounds",
         "units": "degrees_N",
-        "axis": "Y",
     }
 
     lon_bnds = np.arange(0.0, 360.0 + delta_x, delta_x)
@@ -106,7 +105,6 @@ def generate_standard_grid(delta_x=1.0, delta_y=1.0):
     lon_bnds.attrs = {
         "long_name": "longitude bounds",
         "units": "degrees_E",
-        "axis": "X",
     }
 
     bnds = xr.DataArray([1.0, 2.0], dims="bnds", attrs={"long_name": "vertex number"})
