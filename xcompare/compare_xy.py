@@ -9,7 +9,6 @@ from xcompare.coord_util import (
     identical_xy_coords,
     list_dset_dimset,
     fix_bounds_attributes,
-    remove_unused_bounds_attrs,
     valid_xy_dims,
     extract_dimset,
 )
@@ -213,9 +212,6 @@ def compare_datasets(
     # difference the two datasets
     diff = comparables[0] - comparables[1]
 
-    print(diff)
-    print(target)
-
     # calculate comparison statistics
     if stats:
         try:
@@ -235,8 +231,10 @@ def compare_datasets(
                         fmt="dict",
                     )
                     diff[var].attrs = {**diff[var].attrs, **_stats}
-                except Exception as exception:
+                except Exception as _:
                     warnings.warn(f"Unable to calculate statistics for {var}")
+
+    weights_ds = weights_ds if save_weights else None
 
     result = (diff, weights_ds)
 
@@ -363,15 +361,18 @@ def wrap_compare_datasets(ds1, ds2, weights=None, verbose=False, resolution=None
     dimlist_2 = list_dset_dimset(ds2)
     ds2_vars = [x for x in ds2_vars if ds2[x].dims in dimlist_2]
 
-    varlist = list(set(ds1_vars).intersection(set(ds2_vars)))
-
     # a bit hackey in terms of letting lat-lon grids pass through
     dimlist_1 = [(None, None)] if len(dimlist_1) == 0 else dimlist_1
     dimlist_2 = [(None, None)] if len(dimlist_2) == 0 else dimlist_2
 
     if len(dimlist_1) == 1 and len(dimlist_2) == 1:
         diff, weights_ds = compare_datasets(
-            ds1, ds2, save_weights=True, verbose=verbose, resolution=resolution
+            ds1,
+            ds2,
+            save_weights=True,
+            verbose=verbose,
+            weights=weights,
+            resolution=resolution,
         )
 
     else:
