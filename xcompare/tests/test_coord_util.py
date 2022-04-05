@@ -57,7 +57,7 @@ def test_fix_bounds_attributes():
 
 
 def test_infer_coordinate_system():
-    """ tests coordinate inference function """
+    """tests coordinate inference function"""
     assert coord_util.infer_coordinate_system(dset1) == "yx"
     assert coord_util.infer_coordinate_system(dset1.random) == "yx"
 
@@ -77,6 +77,15 @@ def test_list_dset_dimset():
     result = sorted(coord_util.list_dset_dimset(static))
     answer = [("yh", "xh"), ("yh", "xq"), ("yq", "xh"), ("yq", "xq")]
     assert result == answer
+
+
+def test_remove_unused_bounds_attrs():
+    """tests removal of unused bounds attributes"""
+    result = coord_util.remove_unused_bounds_attrs(
+        dset3.drop_vars(["lat_bnds", "lon_bnds"])
+    )
+    assert "bounds" not in result.lon.attrs.keys()
+    assert "bounds" not in result.lat.attrs.keys()
 
 
 def test_reset_nominal_coords_1():
