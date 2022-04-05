@@ -9,6 +9,7 @@ from xcompare.coord_util import (
     identical_xy_coords,
     list_dset_dimset,
     fix_bounds_attributes,
+    remove_unused_bounds_attrs,
     valid_xy_dims,
     extract_dimset,
 )
@@ -28,6 +29,31 @@ __all__ = [
 def compare_arrays(
     arr1, arr2, verbose=False, weights=None, save_weights=False, resolution=None
 ):
+    """Function to compare two data array objects
+
+    This functions returns the difference between to Xarray data arrays.
+
+    Parameters
+    ----------
+    arr1 : xarray.core.dataarray.DataArray
+        First input data array
+    arr2 : xarray.core.dataarray.DataArray
+        Second input data array
+    verbose : bool, optional
+        Verbose output, by default False
+    weights : str, path-like, optional
+        Pre-calculated weights file for xESMF, by default None
+    save_weights : bool, optional
+        Save xESMF weights, by default False
+    resolution : str, optional
+        Target resolution of "low", "high" or "common",
+        by default None
+
+    Returns
+    -------
+    Tuple[xarray.core.dataarray.DataArray, xarray.core.dataset.Dataset]
+        Difference array and weights dataset
+    """
 
     # squeeze the arrays before starting
     arr1 = arr1.squeeze()
@@ -69,6 +95,33 @@ def compare_arrays(
 
 
 def determine_target(ds1, ds2, resolution=None):
+    """Function to determine target resolution
+
+    This function compares to dataset objects and returns the
+    target and source datasets depending on the requested
+    resolution convention:
+
+        "low" : regrid target is the lower resolution dataset
+        "high" : regrid target is the higher resolution dataset
+        "common" : regrid target is a standard 1-deg lat-lon dataset
+
+    If `resolution=None`, ds2 is the target resolution
+
+    Parameters
+    ----------
+    ds1 : xarray.core.dataset.Dataset
+        First input dataset
+    ds2 : xarray.core.dataset.Dataset
+        Second input dataset
+    resolution : str, optional
+        Target resolution of "low", "high" or "common",
+        by default None
+
+    Returns
+    -------
+    Tuple[xarray.core.dataset.Dataset, xarray.core.dataset.Dataset]
+        Target resolution dataset, source resolution dataset
+    """
 
     # calculate the number of grid points and determine which dataset
     # is lower resolution
@@ -108,6 +161,35 @@ def compare_datasets(
     save_weights=False,
     resolution=None,
 ):
+    """Function to compare two dataset objects
+
+    This functions returns the difference between to Xarray datasets.
+
+    Parameters
+    ----------
+    ds1 : xarray.core.dataset.Dataset
+        First input dataset
+    ds2 : xarray.core.dataset.Dataset
+        Second input dataset
+    verbose : bool, optional
+        Verbose output, by default False
+    weights : str, path-like, optional
+        Pre-calculated weights file for xESMF, by default None
+    stats : bool, optional
+        Calculate statistics. Requires area field be present
+        in the target dataset. By default, True
+    save_weights : bool, optional
+        Save xESMF weights, by default False
+    resolution : str, optional
+        Target resolution of "low", "high" or "common",
+        by default None
+
+
+    Returns
+    -------
+    Tuple[xarray.core.dataset.Dataset, xarray.core.dataset.Dataset]
+        Difference dataset and weights dataset
+    """
 
     comparables = rename_coords_xy(ds1, ds2)
 
@@ -131,23 +213,30 @@ def compare_datasets(
     # difference the two datasets
     diff = comparables[0] - comparables[1]
 
+    print(diff)
+    print(target)
+
     # calculate comparison statistics
     if stats:
         try:
             area = target.cf["area"]
+            print(area)
         except KeyError as _:
             area = None
             warnings.warn("Unable to determine cell area. Stats will not be provided")
 
         if area is not None:
             for var in diff.keys():
-                _stats = xr_stats_2d(
-                    comparables[0][var],
-                    comparables[1][var],
-                    area,
-                    fmt="dict",
-                )
-                diff[var].attrs = {**diff[var].attrs, **_stats}
+                try:
+                    _stats = xr_stats_2d(
+                        comparables[0][var],
+                        comparables[1][var],
+                        area,
+                        fmt="dict",
+                    )
+                    diff[var].attrs = {**diff[var].attrs, **_stats}
+                except Exception as exception:
+                    warnings.warn(f"Unable to calculate statistics for {var}")
 
     result = (diff, weights_ds)
 
@@ -155,6 +244,27 @@ def compare_datasets(
 
 
 def regrid_dataset(source, target, weights=None, verbose=False):
+    """Function to regrid datasets
+
+    This function invokes the xESMF regridder and regrids a source
+    dataset to the same grid as the target dataset.
+
+    Parameters
+    ----------
+    source : xarray.core.dataset.Dataset
+        Source xarray dataset
+    target : xarray.core.dataset.Dataset
+        Target xarray dataset
+    weights : str, path-like, optional
+        Pre-calculated weights file for xESMF, by default None
+    verbose : bool, optional
+        Verbose output, by default False
+
+    Returns
+    -------
+    Tuple[xarray.core.dataset.Dataset, xarray.core.dataset.Dataset]
+        Regridded dataset and weights dataset
+    """
     if verbose:
         print("Starting regridder")
         if weights is not None:
@@ -195,8 +305,43 @@ def regrid_dataset(source, target, weights=None, verbose=False):
 
 
 def wrap_compare_datasets(ds1, ds2, weights=None, verbose=False, resolution=None):
+    """Wrapper function to compare to xarray datasets.
+
+    This function compares two xarray dataset object but performs cleaning
+    operations before calling `compare_datasets`:
+
+        - squeezes the datasets to remove unused dimensions
+        - fixes non-CF compliant bounds attributes
+        - detects a mixture of different horizontal grid conventions in
+          a single dataset (e.g. cell centers, corners, etc.) and regrids
+          all fields to a common standard 1-degree lat-lon grid
+
+    Parameters
+    ----------
+    ds1 : xarray.core.dataset.Dataset
+        First input xarray dataset
+    ds2 : xarray.core.dataset.Dataset
+        Second input xarray dataset
+    weights : str, path-like, optional
+        Pre-calculated weights file for xESMF, by default None
+    verbose : bool, optional
+        Verbose output, by default False
+    resolution : str, optional
+        Target resolution of "low", "high" or "common",
+        by default None
+
+
+    Returns
+    -------
+    Tuple[xarray.core.dataset.Dataset, xarray.core.dataset.Dataset]
+        Difference dataset and weights dataset
+    """
 
     ds1 = ds1.squeeze()
+    ds2 = ds2.squeeze()
+
+    ds1 = fix_bounds_attributes(ds1)
+    ds2 = fix_bounds_attributes(ds2)
 
     if "static_fields" in ds1.attrs.keys():
         ds1_static_vars = ds1.attrs["static_fields"]
@@ -219,6 +364,10 @@ def wrap_compare_datasets(ds1, ds2, weights=None, verbose=False, resolution=None
     ds2_vars = [x for x in ds2_vars if ds2[x].dims in dimlist_2]
 
     varlist = list(set(ds1_vars).intersection(set(ds2_vars)))
+
+    # a bit hackey in terms of letting lat-lon grids pass through
+    dimlist_1 = [(None, None)] if len(dimlist_1) == 0 else dimlist_1
+    dimlist_2 = [(None, None)] if len(dimlist_2) == 0 else dimlist_2
 
     if len(dimlist_1) == 1 and len(dimlist_2) == 1:
         diff, weights_ds = compare_datasets(
