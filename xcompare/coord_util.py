@@ -453,7 +453,6 @@ def list_dset_dimset(dset):
     dims = [dset[x].dims for x in list(dset.keys())]
     dims = list(set(dims))
     dims = [x for x in dims if len(x) == 2]
-    print(dims)
     dims = [x for x in dims if valid_xy_dims(dset, x)]
     return dims
 
