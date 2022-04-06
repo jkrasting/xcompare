@@ -21,7 +21,7 @@ __all__ = [
 ]
 
 
-def associate_ocean_coords(obj, static, prefix=None):
+def associate_ocean_coords(obj, static, prefix=None, silence_warnings=False):
     """Function to associate ocean coordinates with an xarray object
 
     MOM-specific function to associate grid info with an xarray object.
@@ -37,6 +37,8 @@ def associate_ocean_coords(obj, static, prefix=None):
     prefix : str, list, optional
         Variable prefixes to associate, by default
         ["geolon", "geolat", "area", "wet"]
+    silence_warnings : bool, optional
+        Silence merge warnings, by default False
 
     Returns
     -------
@@ -53,7 +55,9 @@ def associate_ocean_coords(obj, static, prefix=None):
     if isinstance(obj, xr.DataArray):
         result = associate_ocean_coords_array(obj, static, prefix=prefix)
     elif isinstance(obj, xr.Dataset):
-        result = associate_ocean_coords_dataset(obj, static)
+        result = associate_ocean_coords_dataset(
+            obj, static, silence_warnings=silence_warnings
+        )
     else:
         raise ValueError("Input object must be xarray DataArray or Dataset")
 
