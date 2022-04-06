@@ -130,7 +130,7 @@ def associate_ocean_coords_array(arr, static, prefix=None):
     return arr
 
 
-def associate_ocean_coords_dataset(dset, static):
+def associate_ocean_coords_dataset(dset, static, silence_warnings=False):
     """Function to associate ocean coordinates with a dataset
 
     MOM-specific function to associate grid info with Dataset object.
@@ -143,6 +143,8 @@ def associate_ocean_coords_dataset(dset, static):
         Input dataset
     static : xarray.core.dataset.Dataset
         Static dataset containing grid information
+    silence_warnings : bool, optional
+        Silence merge warnings, by default False
 
     Returns
     -------
@@ -179,9 +181,10 @@ def associate_ocean_coords_dataset(dset, static):
                 dset[var].attrs["standard_name"] = "longitude"
 
         else:
-            warnings.warn(
-                f"Static variable {var} already exists in dataset ... skipping"
-            )
+            if not silence_warnings:
+                warnings.warn(
+                    f"Static variable {var} already exists in dataset ... skipping"
+                )
 
     dset.attrs = {**dset.attrs, "static_fields": static_varlist}
 
