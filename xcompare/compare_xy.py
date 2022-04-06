@@ -141,6 +141,11 @@ def determine_target(ds1, ds2, resolution=None):
         target = generate_standard_grid()
         source = None
 
+    elif isinstance(resolution, tuple):
+        resolution = dict(zip(("delta_x", "delta_y"), resolution))
+        target = generate_standard_grid(**resolution)
+        source = None
+
     elif resolution is None:
         source = ds1
         target = ds2
@@ -216,7 +221,6 @@ def compare_datasets(
     if stats:
         try:
             area = target.cf["area"]
-            print(area)
         except KeyError as _:
             area = None
             warnings.warn("Unable to determine cell area. Stats will not be provided")
