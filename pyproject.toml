@@ -23,8 +23,13 @@ classifiers = [
 ]
 dependencies = [
     "importlib_metadata <5.0.0",
+    "cartopy",
+    "cftime",
+    "matplotlib",
     "numpy",
+    "pytest",
     "xarray",
+    "xesmf",
 ]
 
 [project.optional-dependencies]
