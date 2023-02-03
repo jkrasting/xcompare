@@ -1,0 +1,12 @@
+name: testing
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - black
+  - numpy
+  - pip
+  - python
+  - pytest
+  - xarray
+  - xesmf
