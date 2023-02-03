@@ -1,0 +1,57 @@
+[build-system]
+requires = [ "setuptools>=41", "wheel", "setuptools-git-versioning"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xcompare"
+description = "Collection of comparison operations for xarray-based objects"
+dynamic = ["version"]
+authors = [
+    {name = "John Krasting", email="john.krasting@noaa.gov"}
+]
+license = {file = "LICENSE.txt"}
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = ["xarray", "xesmf", "gfdl", "compare"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "License :: Public Domain",
+    "Programming Language :: Python :: 3.9",
+]
+dependencies = [
+    "importlib_metadata <5.0.0",
+    "numpy",
+    "xarray",
+    "xesmf",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+
+[project.urls]
+homepage = "https://github.com/jkrasting/xcompare"
+documentation = "https://xcompare.readthedocs.io"
+repository = "https://github.com/jkrasting/xcompare"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools-git-versioning]
+enabled = true
+template = "{tag}"
+dev_template = "{tag}"
+dirty_template = "{tag}"
+starting_version = "2.0.0" # this is a backup for pip <= 22.0 where git-versioning doesn't work
+
+[tool.dynamic]
+version = "placeholder" # this is a placeholder for the version pulled with git-versioning
+
+# below - example for support files
+#[tool.setuptools.package-data]
+#xcompare = [
+#    "resources/<some_file_here",
+#]
