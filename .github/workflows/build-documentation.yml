@@ -45,6 +45,7 @@ jobs:
           conda env list
           conda list
       - name: Install sphinx and related modules
+        run: |
           pip install -r docs/requirements.txt
       - name: Build HTML documentation
         run: |
