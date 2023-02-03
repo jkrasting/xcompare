@@ -4,6 +4,7 @@ channels:
   - defaults
 dependencies:
   - matplotlib
+  - cartopy
   - numpy
   - pandoc
   - pip
