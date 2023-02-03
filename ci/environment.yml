@@ -4,6 +4,7 @@ channels:
   - defaults
 dependencies:
   - numpy
+  - pandoc
   - pip
   - python
   - xarray
@@ -16,7 +17,6 @@ dependencies:
     - jupyter
     - jupyter-sphinx
     - nbsphinx
-    - pandoc
     - pydata-sphinx-theme
     - sphinx
     - sphinx-book-theme
