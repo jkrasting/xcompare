@@ -1,0 +1,7 @@
+ipython
+jupyter
+jupyter-sphinx
+nbsphinx
+pydata-sphinx-theme
+sphinx
+sphinx-book-theme
