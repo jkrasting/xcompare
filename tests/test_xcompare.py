@@ -2,7 +2,7 @@ import pytest
 import cftime
 import numpy as np
 import xarray as xr
-from .xcompare import (
+from xcompare import (
     compare_datasets,
     dataset_vars,
     infer_dim_name,
@@ -12,7 +12,7 @@ from .xcompare import (
     equal_horiz_dims,
     extract_var_from_dataset,
 )
-from .xcompare import LON_DIMS, LAT_DIMS, Z_DIMS, TIME_DIMS, AREA_VARS
+from xcompare import LON_DIMS, LAT_DIMS, Z_DIMS, TIME_DIMS, AREA_VARS
 
 
 def xr_times_from_tuples(timetuple, boundstuple, timefmt="gfdl"):
