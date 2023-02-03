@@ -6,7 +6,7 @@ dependencies:
   - numpy
   - pandoc
   - pip
-  - python
+  - python=3.9
   - xarray
   - xesmf
   - pip:
