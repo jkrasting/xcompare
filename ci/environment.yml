@@ -1,21 +1,22 @@
 name: testing
 channels:
-  - defaults
   - conda-forge
+  - defaults
 dependencies:
-  - black
   - numpy
   - pip
   - python
-  - pytest
   - xarray
   - xesmf
-  # documentation packages
-  - ipython
-  - jupyter
-  - jupyter-sphinx
-  - nbsphinx
-  - pandoc
-  - pydata-sphinx-theme
-  - sphinx
-  - sphinx-book-theme
+  - pip:
+    - black
+    - pytest
+    # documentation packages
+    - ipython
+    - jupyter
+    - jupyter-sphinx
+    - nbsphinx
+    - pandoc
+    - pydata-sphinx-theme
+    - sphinx
+    - sphinx-book-theme
