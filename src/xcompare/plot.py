@@ -91,7 +91,6 @@ def plot_three_panel(
     )
 
     if lon_range is not None or lat_range is not None:
-
         arr1_rgd = results["ds1"][var]
         arr2_rgd = results["ds2"][var]
         diff_rgd = results["diff"][var]
@@ -101,7 +100,6 @@ def plot_three_panel(
         diff_rgd.load()
 
         if len(arr1_rgd.lon.shape) == 2:
-
             if lon_range is not None:
                 arr1_rgd = arr1_rgd.where(
                     (arr1_rgd.lon > lon_range[0]) & (arr1_rgd.lon < lon_range[1]),
@@ -141,7 +139,6 @@ def plot_three_panel(
                     )
 
         else:
-
             lon_range = (None, None) if lon_range is None else lon_range
             lat_range = (None, None) if lat_range is None else lat_range
 

@@ -185,7 +185,6 @@ def date_range(ds, ref_time="1970-01-01T00:00:00Z"):
         t1 = -999
 
     else:
-
         if "bounds" in ds[tdim].attrs:
             bounds = ds[tdim].bounds
         else:
@@ -305,7 +304,6 @@ def extract_var_from_dataset(ds, varlist=None):
     varlist = sorted(list(set(varlist)))
 
     for var in varlist:
-
         # setup a local array
         _arr = ds[var]
 
