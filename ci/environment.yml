@@ -10,3 +10,12 @@ dependencies:
   - pytest
   - xarray
   - xesmf
+  # documentation packages
+  - ipython
+  - jupyter
+  - jupyter-sphinx
+  - nbsphinx
+  - pandoc
+  - pydata-sphinx-theme
+  - sphinx
+  - sphinx-book-theme

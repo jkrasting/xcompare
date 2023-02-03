@@ -32,24 +32,19 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           channels: conda-forge
+          mamba-version: '*'
           python-version: ${{ matrix.python-version }}
           activate-environment: testing
           auto-activate-base: false
 
       - name: Set up conda environment
         run: |
-          conda env update -f ci/environment.yml
+          mamba env update -f ci/environment.yml
           python -m pip install --no-deps -e .
       - name: Conda list information
         run: |
           conda env list
           conda list
-      - name: Install pandoc
-        run: |
-          conda install -c conda-forge pandoc
-      - name: Install sphinx and related modules
-        run: |
-          pip install -r docs/requirements.txt
       - name: Build HTML documentation
         run: |
           cd docs
