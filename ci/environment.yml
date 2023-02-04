@@ -3,16 +3,16 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - matplotlib
   - cartopy
   - cftime
+  - esmpy>=8.0.0
+  - matplotlib
   - numpy
   - pandoc
   - pip
   - python=3.9
   - xarray
   - xesmf>=0.7.0
-  - xesmpy>=8.0.0
   - pip:
     - black
     - pytest
