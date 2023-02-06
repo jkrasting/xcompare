@@ -5,6 +5,7 @@ channels:
 dependencies:
   - cartopy
   - cftime
+  - dask
   - esmpy>=8.0.0
   - matplotlib
   - numpy
@@ -13,9 +14,12 @@ dependencies:
   - python=3.9
   - xarray
   - xesmf>=0.7.0
+  - zarr
   - pip:
+    - aiohttp
     - black
     - pytest
+    - requests
     # documentation packages
     - ipython
     - jupyter
