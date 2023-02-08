@@ -12,6 +12,7 @@ __description__ = msg["Summary"]
 __requires__ = msg["Requires-Dist"]
 __requires_python__ = msg["Requires-Python"]
 
+from . import mom
 from . import plot
 from . import xr_stats
 from . import xcompare
