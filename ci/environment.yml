@@ -1,0 +1,30 @@
+name: testing
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - cartopy
+  - cftime
+  - dask
+  - esmpy>=8.0.0
+  - matplotlib
+  - numpy
+  - pandoc
+  - pip
+  - python=3.9
+  - xarray
+  - xesmf>=0.7.0
+  - zarr
+  - pip:
+    - aiohttp
+    - black
+    - pytest
+    - requests
+    # documentation packages
+    - ipython
+    - jupyter
+    - jupyter-sphinx
+    - nbsphinx
+    - pydata-sphinx-theme
+    - sphinx
+    - sphinx-book-theme

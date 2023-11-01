@@ -3,7 +3,7 @@
 import pytest
 import numpy as np
 import xarray as xr
-from .xr_stats import corr, cov, xr_stats_2d
+from xcompare.xr_stats import corr, cov, xr_stats_2d
 
 
 def test_corr():

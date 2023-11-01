@@ -130,3 +130,7 @@ dmypy.json
 
 # binary datasets
 *.nc
+
+docs/build
+
+.DS_Store

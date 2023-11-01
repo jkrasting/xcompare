@@ -1,0 +1,24 @@
+name: testing
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - matplotlib
+  - cartopy
+  - numpy
+  - pandoc
+  - pip
+  - python=3.9
+  - xarray
+  - xesmf
+  - pip:
+    - black
+    - pytest
+    # documentation packages
+    - ipython
+    - jupyter
+    - jupyter-sphinx
+    - nbsphinx
+    - pydata-sphinx-theme
+    - sphinx
+    - sphinx-book-theme
