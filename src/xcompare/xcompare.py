@@ -382,7 +382,9 @@ def extract_var_from_dataset(ds, varlist=None):
         # append to new dataset
         result[var] = _arr
 
-    if areavar in result.variables:
+    if (areavar in result.variables) and (areavar != "area"):
+        if "area" in result.variables:
+            result = result.drop_vars(["area"])
         result = result.rename({areavar: "area"})
 
     return result
